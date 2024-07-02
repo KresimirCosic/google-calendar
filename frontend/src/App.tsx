@@ -7,12 +7,13 @@ import { useEffect, useState } from "react";
 import DateTimePicker from "react-datetime-picker";
 
 import "./App.css";
+import GoogleCalendarEventCard from "./components/GoogleCalendarEventCard/GoogleCalendarEventCard";
+import { googleCalendarEventBaseApiUrl } from "./constants/google";
 import {
   CreateCalendarEventBody,
   GoogleApiResponse,
   GoogleCalendarEvent,
 } from "./types";
-import { googleCalendarEventBaseApiUrl } from "./constants/google";
 
 function App() {
   /**
@@ -21,10 +22,14 @@ function App() {
   const [tokenResponse, setTokenResponse] = useState<
     Omit<TokenResponse, "error" | "error_description" | "error_uri"> | undefined
   >(undefined);
-  const [eventName, setEventName] = useState("");
-  const [eventDescription, setEventDescription] = useState("");
-  const [startDatetime, setStartDatetime] = useState<Date>(new Date());
-  const [endDatetime, setEndDatetime] = useState<Date>(new Date());
+  const [isGettingAllCalendarEvents, setIsGettingAllCalendarEvents] =
+    useState(false);
+  const [createEventName, setCreateEventName] = useState("");
+  const [createEventDescription, setCreateEventDescription] = useState("");
+  const [createStartDatetime, setCreateStartDatetime] = useState<Date>(
+    new Date()
+  );
+  const [createEndDatetime, setCreateEndDatetime] = useState<Date>(new Date());
   const [calendarEvents, setCalendarEvents] = useState<GoogleCalendarEvent[]>(
     []
   );
@@ -44,20 +49,40 @@ function App() {
     googleLogout();
     setTokenResponse(undefined);
   };
+  const getAllCalendarEvents = () => {
+    if (tokenResponse) {
+      setCalendarEvents([]);
+      setIsGettingAllCalendarEvents(true);
+
+      fetch(`${googleCalendarEventBaseApiUrl}`, {
+        headers: {
+          Authorization: `Bearer ${tokenResponse.access_token}`,
+        },
+      })
+        .then((response) => response.json())
+        .then((data: GoogleApiResponse<GoogleCalendarEvent[]>) => {
+          setCalendarEvents(data.items);
+        })
+        .catch((error) => console.error(error))
+        .finally(() => {
+          setIsGettingAllCalendarEvents(false);
+        });
+    }
+  };
   const createCalendarEvent = () => {
     if (tokenResponse) {
       const { timeZone } = Intl.DateTimeFormat().resolvedOptions();
       const body: CreateCalendarEventBody = {
         start: {
-          dateTime: startDatetime.toISOString(),
+          dateTime: createStartDatetime.toISOString(),
           timeZone,
         },
         end: {
-          dateTime: endDatetime.toISOString(),
+          dateTime: createEndDatetime.toISOString(),
           timeZone,
         },
-        summary: eventName,
-        description: eventDescription,
+        summary: createEventName,
+        description: createEventDescription,
       };
 
       fetch(googleCalendarEventBaseApiUrl, {
@@ -69,70 +94,21 @@ function App() {
       })
         .then((response) => {
           resetCreateForm();
-        })
-        .catch((error) => console.error(error));
-    }
-  };
-  const updateCalendarEvent = (id: string) => {
-    if (tokenResponse) {
-      const { timeZone } = Intl.DateTimeFormat().resolvedOptions();
-      const body: CreateCalendarEventBody = {
-        start: {
-          dateTime: startDatetime.toISOString(),
-          timeZone,
-        },
-        end: {
-          dateTime: endDatetime.toISOString(),
-          timeZone,
-        },
-        summary: eventName,
-        description: eventDescription,
-      };
-
-      fetch(`${googleCalendarEventBaseApiUrl}/${id}`, {
-        headers: {
-          Authorization: `Bearer ${tokenResponse.access_token}`,
-        },
-        method: "PUT",
-        body: JSON.stringify(body),
-      });
-    }
-  };
-  const deleteCalendarEvent = (id: string) => {
-    if (tokenResponse) {
-      fetch(`${googleCalendarEventBaseApiUrl}/${id}`, {
-        headers: {
-          Authorization: `Bearer ${tokenResponse.access_token}`,
-        },
-        method: "DELETE",
-      })
-        .then((response) => {
-          console.log(response);
+          getAllCalendarEvents();
         })
         .catch((error) => console.error(error));
     }
   };
   const resetCreateForm = () => {
-    setEventName("");
-    setEventDescription("");
+    setCreateEventName("");
+    setCreateEventDescription("");
   };
 
   /**
    * Side effects
    */
   useEffect(() => {
-    if (tokenResponse) {
-      fetch("${googleCalendarEventBaseApiUrl}", {
-        headers: {
-          Authorization: `Bearer ${tokenResponse.access_token}`,
-        },
-      })
-        .then((response) => response.json())
-        .then((data: GoogleApiResponse<GoogleCalendarEvent[]>) => {
-          setCalendarEvents(data.items);
-        })
-        .catch((error) => console.error(error));
-    }
+    getAllCalendarEvents();
   }, [tokenResponse]);
 
   return (
@@ -147,17 +123,17 @@ function App() {
             <h1>Create an event</h1>
             <p>Start datetime*:</p>
             <DateTimePicker
-              value={startDatetime}
+              value={createStartDatetime}
               onChange={(value) => {
-                setStartDatetime(value as Date);
+                setCreateStartDatetime(value as Date);
               }}
             />
             <br />
             <p>End datetime*:</p>
             <DateTimePicker
-              value={endDatetime}
+              value={createEndDatetime}
               onChange={(value) => {
-                setEndDatetime(value as Date);
+                setCreateEndDatetime(value as Date);
               }}
             />
             <br />
@@ -166,8 +142,8 @@ function App() {
             </p>
             <input
               type="text"
-              value={eventName}
-              onChange={(event) => setEventName(event.target.value)}
+              value={createEventName}
+              onChange={(event) => setCreateEventName(event.target.value)}
             />
             <br />
             <p>
@@ -175,32 +151,39 @@ function App() {
             </p>
             <input
               type="text"
-              value={eventDescription}
-              onChange={(event) => setEventDescription(event.target.value)}
+              value={createEventDescription}
+              onChange={(event) =>
+                setCreateEventDescription(event.target.value)
+              }
             />
 
             <br />
             <br />
 
-            <button onClick={createCalendarEvent}>Create</button>
+            <button
+              onClick={createCalendarEvent}
+              disabled={!createStartDatetime || !createEndDatetime}
+            >
+              Create
+            </button>
           </div>
 
           <br />
 
-          <ul>
-            {calendarEvents.map((calendarEvent) => (
-              <li key={calendarEvent.id}>
-                <p>Summary: {calendarEvent.summary}</p>
-                <p>Description: {calendarEvent.description}</p>
-                <button onClick={() => updateCalendarEvent(calendarEvent.id)}>
-                  Update
-                </button>
-                <button onClick={() => deleteCalendarEvent(calendarEvent.id)}>
-                  Delete
-                </button>
-              </li>
-            ))}
-          </ul>
+          {isGettingAllCalendarEvents ? (
+            <h2>Loading events...</h2>
+          ) : (
+            <ul>
+              {calendarEvents.map((calendarEvent) => (
+                <GoogleCalendarEventCard
+                  key={calendarEvent.id}
+                  tokenResponse={tokenResponse}
+                  calendarEvent={calendarEvent}
+                  getAllCalendarEvents={getAllCalendarEvents}
+                />
+              ))}
+            </ul>
+          )}
         </>
       ) : (
         <button onClick={() => login()}>Google login</button>
