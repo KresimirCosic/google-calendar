@@ -7,7 +7,12 @@ import { useEffect, useState } from "react";
 import DateTimePicker from "react-datetime-picker";
 
 import "./App.css";
-import { GoogleApiResponse, GoogleCalendarEvent } from "./types";
+import {
+  CreateCalendarEventBody,
+  GoogleApiResponse,
+  GoogleCalendarEvent,
+} from "./types";
+import { googleCalendarEventBaseApiUrl } from "./constants/google";
 
 function App() {
   /**
@@ -25,7 +30,7 @@ function App() {
   );
 
   /**
-   * Google auth
+   * Methods
    */
   const login = useGoogleLogin({
     onSuccess: (tokenResponse) => {
@@ -39,13 +44,85 @@ function App() {
     googleLogout();
     setTokenResponse(undefined);
   };
+  const createCalendarEvent = () => {
+    if (tokenResponse) {
+      const { timeZone } = Intl.DateTimeFormat().resolvedOptions();
+      const body: CreateCalendarEventBody = {
+        start: {
+          dateTime: startDatetime.toISOString(),
+          timeZone,
+        },
+        end: {
+          dateTime: endDatetime.toISOString(),
+          timeZone,
+        },
+        summary: eventName,
+        description: eventDescription,
+      };
+
+      fetch(googleCalendarEventBaseApiUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${tokenResponse.access_token}`,
+        },
+        body: JSON.stringify(body),
+      })
+        .then((response) => {
+          resetCreateForm();
+        })
+        .catch((error) => console.error(error));
+    }
+  };
+  const updateCalendarEvent = (id: string) => {
+    if (tokenResponse) {
+      const { timeZone } = Intl.DateTimeFormat().resolvedOptions();
+      const body: CreateCalendarEventBody = {
+        start: {
+          dateTime: startDatetime.toISOString(),
+          timeZone,
+        },
+        end: {
+          dateTime: endDatetime.toISOString(),
+          timeZone,
+        },
+        summary: eventName,
+        description: eventDescription,
+      };
+
+      fetch(`${googleCalendarEventBaseApiUrl}/${id}`, {
+        headers: {
+          Authorization: `Bearer ${tokenResponse.access_token}`,
+        },
+        method: "PUT",
+        body: JSON.stringify(body),
+      });
+    }
+  };
+  const deleteCalendarEvent = (id: string) => {
+    if (tokenResponse) {
+      fetch(`${googleCalendarEventBaseApiUrl}/${id}`, {
+        headers: {
+          Authorization: `Bearer ${tokenResponse.access_token}`,
+        },
+        method: "DELETE",
+      })
+        .then((response) => {
+          console.log(response);
+        })
+        .catch((error) => console.error(error));
+    }
+  };
+  const resetCreateForm = () => {
+    setEventName("");
+    setEventDescription("");
+  };
 
   /**
    * Side effects
    */
   useEffect(() => {
     if (tokenResponse) {
-      fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+      fetch("${googleCalendarEventBaseApiUrl}", {
         headers: {
           Authorization: `Bearer ${tokenResponse.access_token}`,
         },
@@ -101,6 +178,11 @@ function App() {
               value={eventDescription}
               onChange={(event) => setEventDescription(event.target.value)}
             />
+
+            <br />
+            <br />
+
+            <button onClick={createCalendarEvent}>Create</button>
           </div>
 
           <br />
@@ -110,6 +192,12 @@ function App() {
               <li key={calendarEvent.id}>
                 <p>Summary: {calendarEvent.summary}</p>
                 <p>Description: {calendarEvent.description}</p>
+                <button onClick={() => updateCalendarEvent(calendarEvent.id)}>
+                  Update
+                </button>
+                <button onClick={() => deleteCalendarEvent(calendarEvent.id)}>
+                  Delete
+                </button>
               </li>
             ))}
           </ul>
