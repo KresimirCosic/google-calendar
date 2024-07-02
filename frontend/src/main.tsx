@@ -1,5 +1,8 @@
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import React from "react";
+import "react-calendar/dist/Calendar.css";
+import "react-clock/dist/Clock.css";
+import "react-datetime-picker/dist/DateTimePicker.css";
 import ReactDOM from "react-dom/client";
 
 import App from "./App.tsx";
