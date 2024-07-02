@@ -1,27 +1,38 @@
-import { TokenResponse, useGoogleLogin } from "@react-oauth/google";
+import {
+  TokenResponse,
+  googleLogout,
+  useGoogleLogin,
+} from "@react-oauth/google";
 import axios from "axios";
 import { useEffect, useState } from "react";
 
 import "./App.css";
 
 function App() {
-  const [codeResponse, setCodeResponse] = useState<
+  const [tokenResponse, setTokenResponse] = useState<
     Omit<TokenResponse, "error" | "error_description" | "error_uri"> | undefined
   >(undefined);
   const login = useGoogleLogin({
-    onSuccess: (codeResponse) => {
-      setCodeResponse(codeResponse);
+    onSuccess: (tokenResponse) => {
+      setTokenResponse(tokenResponse);
+    },
+    onError: (error) => {
+      console.error(error);
     },
   });
+  const logout = () => {
+    googleLogout();
+    setTokenResponse(undefined);
+  };
 
   useEffect(() => {
-    if (codeResponse) {
+    if (tokenResponse) {
       axios
         .get(
           "https://www.googleapis.com/calendar/v3/calendars/primary/events",
           {
             headers: {
-              Authorization: `Bearer ${codeResponse.access_token}`,
+              Authorization: `Bearer ${tokenResponse.access_token}`,
             },
           }
         )
@@ -29,12 +40,12 @@ function App() {
           console.log(response);
         });
     }
-  }, [codeResponse]);
+  }, [tokenResponse]);
 
   return (
     <div id="app">
-      {codeResponse ? (
-        <button>Google logout</button>
+      {tokenResponse ? (
+        <button onClick={() => logout()}>Google logout</button>
       ) : (
         <button onClick={() => login()}>Google login</button>
       )}
