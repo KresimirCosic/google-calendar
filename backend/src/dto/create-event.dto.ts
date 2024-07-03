@@ -7,10 +7,6 @@ export class CreateEventDto {
   @IsNotEmpty()
   eventId: string;
 
-  @IsString()
-  @IsNotEmpty()
-  userId: string;
-
   @IsEnum(Action)
   action: Action;
 }
