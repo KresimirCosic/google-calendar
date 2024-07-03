@@ -1,0 +1,14 @@
+.google-calendar-event-card {
+  list-style: none;
+  padding-block: 4rem;
+  padding-inline: 2rem;
+  box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.1);
+  border-radius: 1rem;
+  transition: all 0.35s;
+}
+.google-calendar-event-card:not(:last-child) {
+  margin-block-end: 2rem;
+}
+.google-calendar-event-card:hover {
+  box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.35);
+}
