@@ -8,11 +8,10 @@ export class AppService {
   constructor(private readonly _prismaService: PrismaService) {}
 
   async createEvent(createEventDto: CreateEventDto) {
-    const { userId, eventId, action } = createEventDto;
+    const { eventId, action } = createEventDto;
 
     return this._prismaService.googleCalendarEvent.create({
       data: {
-        userId,
         eventId,
         action,
       },

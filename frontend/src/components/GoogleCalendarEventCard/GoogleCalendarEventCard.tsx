@@ -3,7 +3,12 @@ import { useState } from "react";
 import DateTimePicker from "react-datetime-picker";
 
 import { googleCalendarEventBaseApiUrl } from "../../constants/google";
-import { CreateCalendarEventBody, GoogleCalendarEvent } from "../../types";
+import { Action } from "../../enums/action";
+import {
+  CreateCalendarEventBody,
+  GoogleCalendarEvent,
+  Payload,
+} from "../../types";
 import styles from "./GoogleCalendarEventCard.module.css";
 
 type GoogleCalendarEventCardProps = {
@@ -58,6 +63,21 @@ function GoogleCalendarEventCard(props: GoogleCalendarEventCardProps) {
       })
         .then((response) => {
           props.getAllCalendarEvents();
+
+          const body: Payload = {
+            eventId: id,
+            action: Action.UPDATE,
+          };
+
+          fetch("/api", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+          })
+            .then((res) => console.log(res))
+            .catch((err) => console.error(err));
         })
         .catch((error) => console.error(error))
         .finally(() => {
@@ -77,6 +97,21 @@ function GoogleCalendarEventCard(props: GoogleCalendarEventCardProps) {
       })
         .then((response) => {
           props.getAllCalendarEvents();
+
+          const body: Payload = {
+            eventId: id,
+            action: Action.DELETE,
+          };
+
+          fetch("/api", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+          })
+            .then((res) => console.log(res))
+            .catch((err) => console.error(err));
         })
         .catch((error) => console.error(error))
         .finally(() => {

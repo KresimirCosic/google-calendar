@@ -9,10 +9,12 @@ import DateTimePicker from "react-datetime-picker";
 import "./App.css";
 import GoogleCalendarEventCard from "./components/GoogleCalendarEventCard/GoogleCalendarEventCard";
 import { googleCalendarEventBaseApiUrl } from "./constants/google";
+import { Action } from "./enums/action";
 import {
   CreateCalendarEventBody,
   GoogleApiResponse,
   GoogleCalendarEvent,
+  Payload,
 } from "./types";
 
 function App() {
@@ -92,9 +94,25 @@ function App() {
         },
         body: JSON.stringify(body),
       })
-        .then((response) => {
+        .then((response) => response.json())
+        .then((data: GoogleCalendarEvent) => {
           resetCreateForm();
           getAllCalendarEvents();
+
+          const body: Payload = {
+            eventId: data.id,
+            action: Action.CREATE,
+          };
+
+          fetch("/api", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+          })
+            .then((res) => console.log(res))
+            .catch((err) => console.error(err));
         })
         .catch((error) => console.error(error));
     }
