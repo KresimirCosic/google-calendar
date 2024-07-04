@@ -17,16 +17,12 @@ datasource db {
 model GoogleCalendarEvent {
   id        Int      @id @default(autoincrement())
   eventId   String // Google Calendar Event ID
-  userId    String // User ID (Google ID)
-  action    Action // Action type: CREATE, READ, UPDATE, DELETE
+  action    Action // Action type: CREATE, UPDATE, DELETE
   createdAt DateTime @default(now())
-
-  @@index([userId])
 }
 
 enum Action {
   CREATE
-  READ
   UPDATE
   DELETE
 }
