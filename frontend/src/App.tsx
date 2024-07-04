@@ -9,13 +9,13 @@ import DateTimePicker from "react-datetime-picker";
 import "./App.css";
 import GoogleCalendarEventCard from "./components/GoogleCalendarEventCard/GoogleCalendarEventCard";
 import { googleCalendarEventBaseApiUrl } from "./constants/google";
+import { Action } from "./enums/action";
 import {
   CreateCalendarEventBody,
   GoogleApiResponse,
   GoogleCalendarEvent,
   Payload,
 } from "./types";
-import { Action } from "./enums/action";
 
 function App() {
   /**
