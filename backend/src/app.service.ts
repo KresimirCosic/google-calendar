@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { $Enums } from '@prisma/client';
 
 import { CreateEventDto } from './dto/create-event.dto';
 import { PrismaService } from './prisma.service';
@@ -14,7 +13,7 @@ export class AppService {
     return this._prismaService.googleCalendarEvent.create({
       data: {
         eventId,
-        action: action as $Enums.Action,
+        action,
       },
     });
   }
